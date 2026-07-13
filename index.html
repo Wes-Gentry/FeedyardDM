@@ -156,7 +156,7 @@ const {
    the project (Project Settings > API).  Nothing else needs editing.
 =================================================================== */
 const SUPABASE_URL = "https://wdhowyopgzbmckjsgsvb.supabase.co"; // e.g. https://abcd1234.supabase.co
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY"; // the "anon" / public key (safe to ship)
+const SUPABASE_ANON_KEY = "sb_publishable_eqYD_dhSeX28wNR2eJgopw_vLQvCXcb"; // the "anon" / public key (safe to ship)
 
 const configured = !SUPABASE_URL.startsWith("YOUR_") && !SUPABASE_ANON_KEY.startsWith("YOUR_");
 const sb = configured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
