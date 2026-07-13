@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>DM Record</title>
 <meta name="theme-color" content="#223a4a" />
+<meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="DM Record" />
@@ -137,21 +138,25 @@
 
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 <div id="root"></div>
 
-<script type="text/babel" data-presets="react">
-const { useState, useEffect, useMemo, useRef } = React;
+<script>
+const {
+  useState,
+  useEffect,
+  useMemo,
+  useRef
+} = React;
 
 /* ===================================================================
    1. CONFIG  —  paste your two Supabase values here after you create
    the project (Project Settings > API).  Nothing else needs editing.
 =================================================================== */
-const SUPABASE_URL      = "https://wdhowyopgzbmckjsgsvb.supabase.co";       // e.g. https://abcd1234.supabase.co
-const SUPABASE_ANON_KEY = "sb_publishable_eqYD_dhSeX28wNR2eJgopw_vLQvCXcb";  // the "anon" / public key (safe to ship)
+const SUPABASE_URL = "https://wdhowyopgzbmckjsgsvb.supabase.co"; // e.g. https://abcd1234.supabase.co
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY"; // the "anon" / public key (safe to ship)
 
 const configured = !SUPABASE_URL.startsWith("YOUR_") && !SUPABASE_ANON_KEY.startsWith("YOUR_");
 const sb = configured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -159,536 +164,864 @@ const sb = configured ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) :
 /* ===================================================================
    2. Small helpers
 =================================================================== */
-function computeStats(values){
+function computeStats(values) {
   const n = values.length;
-  if(n === 0) return { n:0, mean:null, sd:null, cv:null };
-  const mean = values.reduce((a,b)=>a+b,0) / n;
-  if(n < 2) return { n, mean, sd:null, cv:null };
-  const variance = values.reduce((a,b)=>a + (b-mean)*(b-mean), 0) / (n-1); // sample (n-1)
+  if (n === 0) return {
+    n: 0,
+    mean: null,
+    sd: null,
+    cv: null
+  };
+  const mean = values.reduce((a, b) => a + b, 0) / n;
+  if (n < 2) return {
+    n,
+    mean,
+    sd: null,
+    cv: null
+  };
+  const variance = values.reduce((a, b) => a + (b - mean) * (b - mean), 0) / (n - 1); // sample (n-1)
   const sd = Math.sqrt(variance);
-  const cv = mean !== 0 ? (sd/mean)*100 : null;
-  return { n, mean, sd, cv };
+  const cv = mean !== 0 ? sd / mean * 100 : null;
+  return {
+    n,
+    mean,
+    sd,
+    cv
+  };
 }
-function fmt(x, d){ return (x===null || x===undefined || Number.isNaN(x)) ? "—" : Number(x).toFixed(d); }
-function todayISO(){
-  const d = new Date(); const off = d.getTimezoneOffset();
-  return new Date(d.getTime() - off*60000).toISOString().slice(0,10);
+function fmt(x, d) {
+  return x === null || x === undefined || Number.isNaN(x) ? "—" : Number(x).toFixed(d);
 }
-function cutoffISO(days){
-  const d = new Date(); d.setDate(d.getDate() - days);
+function todayISO() {
+  const d = new Date();
   const off = d.getTimezoneOffset();
-  return new Date(d.getTime() - off*60000).toISOString().slice(0,10);
+  return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
+}
+function cutoffISO(days) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  const off = d.getTimezoneOffset();
+  return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
 }
 
 /* ===================================================================
    3. Setup notice (shown until the two config values are filled in)
 =================================================================== */
-function SetupNotice(){
-  return (
-    <div className="center-screen">
-      <div className="auth-card">
-        <div className="logo">DM Record</div>
-        <div className="sub">Setup needed</div>
-        <p className="muted">Open <code className="inline">index.html</code> and paste your Supabase
-          project URL and anon key into the CONFIG section near the top, then reload.</p>
-        <p className="muted" style={{marginTop:12}}>You'll find both in the Supabase dashboard under
-          <b> Project Settings → API</b>.</p>
-      </div>
-    </div>
-  );
+function SetupNotice() {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "center-screen"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "auth-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "logo"
+  }, "DM Record"), /*#__PURE__*/React.createElement("div", {
+    className: "sub"
+  }, "Setup needed"), /*#__PURE__*/React.createElement("p", {
+    className: "muted"
+  }, "Open ", /*#__PURE__*/React.createElement("code", {
+    className: "inline"
+  }, "index.html"), " and paste your Supabase project URL and anon key into the CONFIG section near the top, then reload."), /*#__PURE__*/React.createElement("p", {
+    className: "muted",
+    style: {
+      marginTop: 12
+    }
+  }, "You'll find both in the Supabase dashboard under", /*#__PURE__*/React.createElement("b", null, " Project Settings → API"), ".")));
 }
 
 /* ===================================================================
    4. Login
 =================================================================== */
-function LoginView(){
-  const [email,setEmail]=useState("");
-  const [pw,setPw]=useState("");
-  const [busy,setBusy]=useState(false);
-  const [err,setErr]=useState("");
-
-  async function signIn(){
-    setErr(""); setBusy(true);
-    const { error } = await sb.auth.signInWithPassword({ email:email.trim(), password:pw });
+function LoginView() {
+  const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  async function signIn() {
+    setErr("");
+    setBusy(true);
+    const {
+      error
+    } = await sb.auth.signInWithPassword({
+      email: email.trim(),
+      password: pw
+    });
     setBusy(false);
-    if(error) setErr(error.message || "Could not sign in.");
+    if (error) setErr(error.message || "Could not sign in.");
     // success handled by the auth listener in App
   }
-  function onKey(e){ if(e.key==="Enter") signIn(); }
-
-  return (
-    <div className="center-screen">
-      <div className="auth-card">
-        <div className="logo">DM Record</div>
-        <div className="sub">Dry-matter log</div>
-        <label className="field">Email</label>
-        <input type="email" autoComplete="username" inputMode="email" value={email}
-               onChange={e=>setEmail(e.target.value)} onKeyDown={onKey} />
-        <label className="field">Password</label>
-        <input type="password" autoComplete="current-password" value={pw}
-               onChange={e=>setPw(e.target.value)} onKeyDown={onKey} />
-        <button className="btn" disabled={busy || !email || !pw} onClick={signIn}>
-          {busy ? "Signing in…" : "Sign in"}
-        </button>
-        {err && <div className="err-text">{err}</div>}
-      </div>
-    </div>
-  );
+  function onKey(e) {
+    if (e.key === "Enter") signIn();
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "center-screen"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "auth-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "logo"
+  }, "DM Record"), /*#__PURE__*/React.createElement("div", {
+    className: "sub"
+  }, "Dry-matter log"), /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "Email"), /*#__PURE__*/React.createElement("input", {
+    type: "email",
+    autoComplete: "username",
+    inputMode: "email",
+    value: email,
+    onChange: e => setEmail(e.target.value),
+    onKeyDown: onKey
+  }), /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "Password"), /*#__PURE__*/React.createElement("input", {
+    type: "password",
+    autoComplete: "current-password",
+    value: pw,
+    onChange: e => setPw(e.target.value),
+    onKeyDown: onKey
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "btn",
+    disabled: busy || !email || !pw,
+    onClick: signIn
+  }, busy ? "Signing in…" : "Sign in"), err && /*#__PURE__*/React.createElement("div", {
+    className: "err-text"
+  }, err)));
 }
 
 /* ===================================================================
    5. Main app
 =================================================================== */
-function App(){
-  const [session,setSession]   = useState(null);
-  const [ready,setReady]       = useState(false);
-  const [profile,setProfile]   = useState(null);
-  const [feedyards,setFeedyards]=useState([]);
-  const [activeYard,setActiveYard]=useState(null);   // yard id currently in view
-  const [feedstuffs,setFeedstuffs]=useState([]);
-  const [records,setRecords]   = useState([]);
-  const [tab,setTab]           = useState("enter");
-  const [toast,setToast]       = useState(null);
-  const [loadingData,setLoadingData]=useState(false);
-
+function App() {
+  const [session, setSession] = useState(null);
+  const [ready, setReady] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [feedyards, setFeedyards] = useState([]);
+  const [activeYard, setActiveYard] = useState(null); // yard id currently in view
+  const [feedstuffs, setFeedstuffs] = useState([]);
+  const [records, setRecords] = useState([]);
+  const [tab, setTab] = useState("enter");
+  const [toast, setToast] = useState(null);
+  const [loadingData, setLoadingData] = useState(false);
   const isAdmin = !!profile?.is_admin;
-
-  function flash(msg,type="ok"){ setToast({msg,type}); }
-  useEffect(()=>{ if(!toast) return; const t=setTimeout(()=>setToast(null),2200); return ()=>clearTimeout(t); },[toast]);
+  function flash(msg, type = "ok") {
+    setToast({
+      msg,
+      type
+    });
+  }
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2200);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   // ---- auth bootstrap ----
-  useEffect(()=>{
-    if(!sb) return;
-    sb.auth.getSession().then(({data})=>{ setSession(data.session); setReady(true); });
-    const { data:sub } = sb.auth.onAuthStateChange((_e,s)=>{ setSession(s); });
-    return ()=> sub.subscription.unsubscribe();
-  },[]);
+  useEffect(() => {
+    if (!sb) return;
+    sb.auth.getSession().then(({
+      data
+    }) => {
+      setSession(data.session);
+      setReady(true);
+    });
+    const {
+      data: sub
+    } = sb.auth.onAuthStateChange((_e, s) => {
+      setSession(s);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   // ---- load profile (and yards if admin) on session ----
-  useEffect(()=>{
-    if(!session){ setProfile(null); setActiveYard(null); setFeedyards([]); return; }
-    (async()=>{
-      const { data:prof } = await sb.from("profiles").select("*").eq("id",session.user.id).single();
+  useEffect(() => {
+    if (!session) {
+      setProfile(null);
+      setActiveYard(null);
+      setFeedyards([]);
+      return;
+    }
+    (async () => {
+      const {
+        data: prof
+      } = await sb.from("profiles").select("*").eq("id", session.user.id).single();
       setProfile(prof || null);
-      if(prof?.is_admin){
-        const { data:ys } = await sb.from("feedyards").select("*").order("name");
+      if (prof?.is_admin) {
+        const {
+          data: ys
+        } = await sb.from("feedyards").select("*").order("name");
         setFeedyards(ys || []);
         setActiveYard(prev => prev || (ys && ys[0] ? ys[0].id : null));
       } else {
         setActiveYard(prof?.feedyard_id || null);
-        if(prof?.feedyard_id){
-          const { data:y } = await sb.from("feedyards").select("*").eq("id",prof.feedyard_id);
+        if (prof?.feedyard_id) {
+          const {
+            data: y
+          } = await sb.from("feedyards").select("*").eq("id", prof.feedyard_id);
           setFeedyards(y || []);
         }
       }
     })();
-  },[session]);
+  }, [session]);
 
   // ---- load feedstuffs + records whenever the active yard changes ----
-  async function loadYardData(yardId){
-    if(!yardId){ setFeedstuffs([]); setRecords([]); return; }
+  async function loadYardData(yardId) {
+    if (!yardId) {
+      setFeedstuffs([]);
+      setRecords([]);
+      return;
+    }
     setLoadingData(true);
-    const [{ data:fs }, { data:recs }] = await Promise.all([
-      sb.from("feedstuffs").select("*").eq("feedyard_id",yardId).order("kind").order("name"),
-      sb.from("dm_records").select("id,feedstuff_id,sample_date,dm_percent")
-        .eq("feedyard_id",yardId).order("sample_date",{ascending:false})
-    ]);
-    setFeedstuffs(fs || []); setRecords(recs || []);
+    const [{
+      data: fs
+    }, {
+      data: recs
+    }] = await Promise.all([sb.from("feedstuffs").select("*").eq("feedyard_id", yardId).order("kind").order("name"), sb.from("dm_records").select("id,feedstuff_id,sample_date,dm_percent").eq("feedyard_id", yardId).order("sample_date", {
+      ascending: false
+    })]);
+    setFeedstuffs(fs || []);
+    setRecords(recs || []);
     setLoadingData(false);
   }
-  useEffect(()=>{ if(activeYard) loadYardData(activeYard); else { setFeedstuffs([]); setRecords([]); } },[activeYard]);
-
-  const yardName = useMemo(()=> feedyards.find(y=>y.id===activeYard)?.name || "", [feedyards,activeYard]);
+  useEffect(() => {
+    if (activeYard) loadYardData(activeYard);else {
+      setFeedstuffs([]);
+      setRecords([]);
+    }
+  }, [activeYard]);
+  const yardName = useMemo(() => feedyards.find(y => y.id === activeYard)?.name || "", [feedyards, activeYard]);
 
   // ---- mutations ----
-  async function saveDM({feedstuff_id, sample_date, dm_percent}){
-    const { error } = await sb.from("dm_records").insert({
-      feedyard_id: activeYard, feedstuff_id, sample_date,
-      dm_percent, created_by: session.user.id
+  async function saveDM({
+    feedstuff_id,
+    sample_date,
+    dm_percent
+  }) {
+    const {
+      error
+    } = await sb.from("dm_records").insert({
+      feedyard_id: activeYard,
+      feedstuff_id,
+      sample_date,
+      dm_percent,
+      created_by: session.user.id
     });
-    if(error){ flash(error.message,"err"); return false; }
-    flash("Saved"); loadYardData(activeYard); return true;
+    if (error) {
+      flash(error.message, "err");
+      return false;
+    }
+    flash("Saved");
+    loadYardData(activeYard);
+    return true;
   }
-  async function addFeedstuff(name,kind){
-    const { error } = await sb.from("feedstuffs").insert({ feedyard_id:activeYard, name:name.trim(), kind });
-    if(error){ flash(error.message,"err"); return false; }
-    flash("Added"); loadYardData(activeYard); return true;
+  async function addFeedstuff(name, kind) {
+    const {
+      error
+    } = await sb.from("feedstuffs").insert({
+      feedyard_id: activeYard,
+      name: name.trim(),
+      kind
+    });
+    if (error) {
+      flash(error.message, "err");
+      return false;
+    }
+    flash("Added");
+    loadYardData(activeYard);
+    return true;
   }
-  async function deleteFeedstuff(id){
-    const { error } = await sb.from("feedstuffs").delete().eq("id",id);
-    if(error){ flash(error.message,"err"); return; }
-    flash("Removed"); loadYardData(activeYard);
+  async function deleteFeedstuff(id) {
+    const {
+      error
+    } = await sb.from("feedstuffs").delete().eq("id", id);
+    if (error) {
+      flash(error.message, "err");
+      return;
+    }
+    flash("Removed");
+    loadYardData(activeYard);
   }
-  async function deleteRecord(id){
-    const { error } = await sb.from("dm_records").delete().eq("id",id);
-    if(error){ flash(error.message,"err"); return; }
-    flash("Deleted"); loadYardData(activeYard);
+  async function deleteRecord(id) {
+    const {
+      error
+    } = await sb.from("dm_records").delete().eq("id", id);
+    if (error) {
+      flash(error.message, "err");
+      return;
+    }
+    flash("Deleted");
+    loadYardData(activeYard);
   }
-  async function addFeedyard(name){
-    const { data, error } = await sb.from("feedyards").insert({ name:name.trim() }).select().single();
-    if(error){ flash(error.message,"err"); return; }
-    const { data:ys } = await sb.from("feedyards").select("*").order("name");
-    setFeedyards(ys||[]); setActiveYard(data.id); flash("Yard created");
+  async function addFeedyard(name) {
+    const {
+      data,
+      error
+    } = await sb.from("feedyards").insert({
+      name: name.trim()
+    }).select().single();
+    if (error) {
+      flash(error.message, "err");
+      return;
+    }
+    const {
+      data: ys
+    } = await sb.from("feedyards").select("*").order("name");
+    setFeedyards(ys || []);
+    setActiveYard(data.id);
+    flash("Yard created");
   }
-  async function assignUser(userId,feedyardId){
-    const { error } = await sb.from("profiles").update({ feedyard_id:feedyardId||null }).eq("id",userId);
-    if(error){ flash(error.message,"err"); return; }
+  async function assignUser(userId, feedyardId) {
+    const {
+      error
+    } = await sb.from("profiles").update({
+      feedyard_id: feedyardId || null
+    }).eq("id", userId);
+    if (error) {
+      flash(error.message, "err");
+      return;
+    }
     flash("Updated");
   }
 
   // ---- gate states ----
-  if(!configured) return <SetupNotice/>;
-  if(!ready) return <div className="center-screen"><div className="muted">Loading…</div></div>;
-  if(!session) return <LoginView/>;
-
-  const tabs = [
-    {id:"enter",     ic:"✎", label:"Enter"},
-    {id:"feedstuffs",ic:"▤", label:"Feedstuffs"},
-    {id:"stats",     ic:"◔", label:"Stats"},
-    ...(isAdmin ? [{id:"manage", ic:"⚙", label:"Manage"}] : [])
-  ];
-
+  if (!configured) return /*#__PURE__*/React.createElement(SetupNotice, null);
+  if (!ready) return /*#__PURE__*/React.createElement("div", {
+    className: "center-screen"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "muted"
+  }, "Loading…"));
+  if (!session) return /*#__PURE__*/React.createElement(LoginView, null);
+  const tabs = [{
+    id: "enter",
+    ic: "✎",
+    label: "Enter"
+  }, {
+    id: "feedstuffs",
+    ic: "▤",
+    label: "Feedstuffs"
+  }, {
+    id: "stats",
+    ic: "◔",
+    label: "Stats"
+  }, ...(isAdmin ? [{
+    id: "manage",
+    ic: "⚙",
+    label: "Manage"
+  }] : [])];
   const noYard = !activeYard;
-
-  return (
-    <div className="app">
-      <header className="topbar">
-        <div className="brand"><b>DM Record</b><span>{yardName || "—"}</span></div>
-        <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
-          <div className="who">{session.user.email}</div>
-          <button className="link" onClick={()=>sb.auth.signOut()}>Sign out</button>
-        </div>
-      </header>
-
-      {isAdmin && feedyards.length>0 && (
-        <div className="yardbar">
-          <label>Yard</label>
-          <select value={activeYard||""} onChange={e=>setActiveYard(e.target.value)}>
-            {feedyards.map(y=> <option key={y.id} value={y.id}>{y.name}</option>)}
-          </select>
-        </div>
-      )}
-
-      <main>
-        {noYard ? (
-          isAdmin
-            ? <div className="notice">No feedyards yet. Go to <b>Manage</b> to create your first yard.</div>
-            : <div className="notice">Your account isn't linked to a feedyard yet. Ask your consultant to assign you.</div>
-        ) : (
-          <>
-            {tab==="enter"      && <EnterView feedstuffs={feedstuffs} onSave={saveDM} goFeedstuffs={()=>setTab("feedstuffs")} />}
-            {tab==="feedstuffs" && <FeedstuffsView feedstuffs={feedstuffs} records={records} onAdd={addFeedstuff} onDelete={deleteFeedstuff} />}
-            {tab==="stats"      && <StatsView feedstuffs={feedstuffs} records={records} onDeleteRecord={deleteRecord} />}
-            {tab==="manage" && isAdmin && <ManageView feedyards={feedyards} feedstuffs={feedstuffs} activeYard={activeYard} onAddYard={addFeedyard} onAddFeedstuff={addFeedstuff} onAssign={assignUser} />}
-          </>
-        )}
-      </main>
-
-      <nav className="tabbar">
-        {tabs.map(t=>(
-          <button key={t.id} className={tab===t.id?"on":""} onClick={()=>setTab(t.id)}>
-            <span className="ic">{t.ic}</span>{t.label}
-          </button>
-        ))}
-      </nav>
-
-      {toast && <div className={"toast "+(toast.type==="err"?"err":"ok")}>{toast.msg}</div>}
-    </div>
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    className: "app"
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "topbar"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "brand"
+  }, /*#__PURE__*/React.createElement("b", null, "DM Record"), /*#__PURE__*/React.createElement("span", null, yardName || "—")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "who"
+  }, session.user.email), /*#__PURE__*/React.createElement("button", {
+    className: "link",
+    onClick: () => sb.auth.signOut()
+  }, "Sign out"))), isAdmin && feedyards.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "yardbar"
+  }, /*#__PURE__*/React.createElement("label", null, "Yard"), /*#__PURE__*/React.createElement("select", {
+    value: activeYard || "",
+    onChange: e => setActiveYard(e.target.value)
+  }, feedyards.map(y => /*#__PURE__*/React.createElement("option", {
+    key: y.id,
+    value: y.id
+  }, y.name)))), /*#__PURE__*/React.createElement("main", null, noYard ? isAdmin ? /*#__PURE__*/React.createElement("div", {
+    className: "notice"
+  }, "No feedyards yet. Go to ", /*#__PURE__*/React.createElement("b", null, "Manage"), " to create your first yard.") : /*#__PURE__*/React.createElement("div", {
+    className: "notice"
+  }, "Your account isn't linked to a feedyard yet. Ask your consultant to assign you.") : /*#__PURE__*/React.createElement(React.Fragment, null, tab === "enter" && /*#__PURE__*/React.createElement(EnterView, {
+    feedstuffs: feedstuffs,
+    onSave: saveDM,
+    goFeedstuffs: () => setTab("feedstuffs")
+  }), tab === "feedstuffs" && /*#__PURE__*/React.createElement(FeedstuffsView, {
+    feedstuffs: feedstuffs,
+    records: records,
+    onAdd: addFeedstuff,
+    onDelete: deleteFeedstuff
+  }), tab === "stats" && /*#__PURE__*/React.createElement(StatsView, {
+    feedstuffs: feedstuffs,
+    records: records,
+    onDeleteRecord: deleteRecord
+  }), tab === "manage" && isAdmin && /*#__PURE__*/React.createElement(ManageView, {
+    feedyards: feedyards,
+    feedstuffs: feedstuffs,
+    activeYard: activeYard,
+    onAddYard: addFeedyard,
+    onAddFeedstuff: addFeedstuff,
+    onAssign: assignUser
+  }))), /*#__PURE__*/React.createElement("nav", {
+    className: "tabbar"
+  }, tabs.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.id,
+    className: tab === t.id ? "on" : "",
+    onClick: () => setTab(t.id)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, t.ic), t.label))), toast && /*#__PURE__*/React.createElement("div", {
+    className: "toast " + (toast.type === "err" ? "err" : "ok")
+  }, toast.msg));
 }
 
 /* ---------------- Enter DM ---------------- */
-function EnterView({feedstuffs,onSave,goFeedstuffs}){
-  const [feedstuffId,setFeedstuffId]=useState("");
-  const [date,setDate]=useState(todayISO());
-  const [dm,setDm]=useState("");
-  const [busy,setBusy]=useState(false);
-
-  useEffect(()=>{ if(!feedstuffId && feedstuffs[0]) setFeedstuffId(feedstuffs[0].id); },[feedstuffs]);
-
-  if(feedstuffs.length===0){
-    return (
-      <>
-        <div className="view-title">Enter DM</div>
-        <div className="card">
-          <p className="muted">No feedstuffs set up for this yard yet.</p>
-          <button className="btn ghost" style={{marginTop:14}} onClick={goFeedstuffs}>Add feedstuffs</button>
-        </div>
-      </>
-    );
+function EnterView({
+  feedstuffs,
+  onSave,
+  goFeedstuffs
+}) {
+  const [feedstuffId, setFeedstuffId] = useState("");
+  const [date, setDate] = useState(todayISO());
+  const [dm, setDm] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (!feedstuffId && feedstuffs[0]) setFeedstuffId(feedstuffs[0].id);
+  }, [feedstuffs]);
+  if (feedstuffs.length === 0) {
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "view-title"
+    }, "Enter DM"), /*#__PURE__*/React.createElement("div", {
+      className: "card"
+    }, /*#__PURE__*/React.createElement("p", {
+      className: "muted"
+    }, "No feedstuffs set up for this yard yet."), /*#__PURE__*/React.createElement("button", {
+      className: "btn ghost",
+      style: {
+        marginTop: 14
+      },
+      onClick: goFeedstuffs
+    }, "Add feedstuffs")));
   }
-
-  const valid = feedstuffId && date && dm!=="" && Number(dm)>=0 && Number(dm)<=100;
-  async function submit(){
-    if(!valid) return;
+  const valid = feedstuffId && date && dm !== "" && Number(dm) >= 0 && Number(dm) <= 100;
+  async function submit() {
+    if (!valid) return;
     setBusy(true);
-    const ok = await onSave({ feedstuff_id:feedstuffId, sample_date:date, dm_percent:Number(dm) });
+    const ok = await onSave({
+      feedstuff_id: feedstuffId,
+      sample_date: date,
+      dm_percent: Number(dm)
+    });
     setBusy(false);
-    if(ok) setDm(""); // keep feedstuff + date for fast repeat entries
+    if (ok) setDm(""); // keep feedstuff + date for fast repeat entries
   }
-
-  return (
-    <>
-      <div className="view-title">Enter DM</div>
-      <div className="card">
-        <label className="field">Feedstuff</label>
-        <select value={feedstuffId} onChange={e=>setFeedstuffId(e.target.value)}>
-          {feedstuffs.map(f=> <option key={f.id} value={f.id}>{f.name} ({f.kind})</option>)}
-        </select>
-        <div className="row2">
-          <div>
-            <label className="field">Date</label>
-            <input type="date" value={date} max={todayISO()} onChange={e=>setDate(e.target.value)} />
-          </div>
-          <div>
-            <label className="field">Dry matter %</label>
-            <input type="number" inputMode="decimal" step="0.1" min="0" max="100"
-                   placeholder="e.g. 34.2" value={dm} onChange={e=>setDm(e.target.value)} />
-          </div>
-        </div>
-        <button className="btn" disabled={!valid || busy} onClick={submit}>
-          {busy ? "Saving…" : "Save reading"}
-        </button>
-      </div>
-      <p className="muted" style={{textAlign:"center"}}>Saved readings roll into Stats automatically.</p>
-    </>
-  );
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "view-title"
+  }, "Enter DM"), /*#__PURE__*/React.createElement("div", {
+    className: "card"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "Feedstuff"), /*#__PURE__*/React.createElement("select", {
+    value: feedstuffId,
+    onChange: e => setFeedstuffId(e.target.value)
+  }, feedstuffs.map(f => /*#__PURE__*/React.createElement("option", {
+    key: f.id,
+    value: f.id
+  }, f.name, " (", f.kind, ")"))), /*#__PURE__*/React.createElement("div", {
+    className: "row2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "Date"), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    value: date,
+    max: todayISO(),
+    onChange: e => setDate(e.target.value)
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "Dry matter %"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    inputMode: "decimal",
+    step: "0.1",
+    min: "0",
+    max: "100",
+    placeholder: "e.g. 34.2",
+    value: dm,
+    onChange: e => setDm(e.target.value)
+  }))), /*#__PURE__*/React.createElement("button", {
+    className: "btn",
+    disabled: !valid || busy,
+    onClick: submit
+  }, busy ? "Saving…" : "Save reading")), /*#__PURE__*/React.createElement("p", {
+    className: "muted",
+    style: {
+      textAlign: "center"
+    }
+  }, "Saved readings roll into Stats automatically."));
 }
 
 /* ---------------- Feedstuffs ---------------- */
-function FeedstuffsView({feedstuffs,records,onAdd,onDelete}){
-  const [name,setName]=useState("");
-  const [kind,setKind]=useState("ingredient");
-  const [busy,setBusy]=useState(false);
-
-  const counts = useMemo(()=>{
-    const c={}; records.forEach(r=>{ c[r.feedstuff_id]=(c[r.feedstuff_id]||0)+1; }); return c;
-  },[records]);
-
-  async function add(){
-    if(!name.trim()) return;
-    setBusy(true); const ok=await onAdd(name,kind); setBusy(false);
-    if(ok) setName("");
+function FeedstuffsView({
+  feedstuffs,
+  records,
+  onAdd,
+  onDelete
+}) {
+  const [name, setName] = useState("");
+  const [kind, setKind] = useState("ingredient");
+  const [busy, setBusy] = useState(false);
+  const counts = useMemo(() => {
+    const c = {};
+    records.forEach(r => {
+      c[r.feedstuff_id] = (c[r.feedstuff_id] || 0) + 1;
+    });
+    return c;
+  }, [records]);
+  async function add() {
+    if (!name.trim()) return;
+    setBusy(true);
+    const ok = await onAdd(name, kind);
+    setBusy(false);
+    if (ok) setName("");
   }
-  function remove(f){
-    const n = counts[f.id]||0;
-    const msg = n>0
-      ? `Remove "${f.name}"? This also deletes its ${n} saved reading${n>1?"s":""}.`
-      : `Remove "${f.name}"?`;
-    if(window.confirm(msg)) onDelete(f.id);
+  function remove(f) {
+    const n = counts[f.id] || 0;
+    const msg = n > 0 ? `Remove "${f.name}"? This also deletes its ${n} saved reading${n > 1 ? "s" : ""}.` : `Remove "${f.name}"?`;
+    if (window.confirm(msg)) onDelete(f.id);
   }
-
-  const ingredients = feedstuffs.filter(f=>f.kind==="ingredient");
-  const rations     = feedstuffs.filter(f=>f.kind==="ration");
-
-  return (
-    <>
-      <div className="view-title">Feedstuffs</div>
-      <div className="card">
-        <h3>Add feedstuff</h3>
-        <label className="field">Name</label>
-        <input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Corn silage, or Finisher #2" />
-        <label className="field">Type</label>
-        <div className="chips" style={{marginBottom:0}}>
-          <div className={"chip"+(kind==="ingredient"?" on":"")} onClick={()=>setKind("ingredient")}>Ingredient</div>
-          <div className={"chip"+(kind==="ration"?" on":"")} onClick={()=>setKind("ration")}>Ration</div>
-        </div>
-        <button className="btn" disabled={!name.trim()||busy} onClick={add}>Add</button>
-      </div>
-
-      <div className="card">
-        <h3>Ingredients</h3>
-        {ingredients.length===0 ? <div className="empty">None yet</div> : (
-          <ul className="items">
-            {ingredients.map(f=>(
-              <li key={f.id}>
-                <span className="nm">{f.name}<span className="muted" style={{fontSize:12,marginLeft:8}}>{counts[f.id]||0} rdg</span></span>
-                <button className="icon-del" onClick={()=>remove(f)}>Remove</button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className="card">
-        <h3>Rations</h3>
-        {rations.length===0 ? <div className="empty">None yet</div> : (
-          <ul className="items">
-            {rations.map(f=>(
-              <li key={f.id}>
-                <span className="nm">{f.name}<span className="muted" style={{fontSize:12,marginLeft:8}}>{counts[f.id]||0} rdg</span></span>
-                <button className="icon-del" onClick={()=>remove(f)}>Remove</button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </>
-  );
+  const ingredients = feedstuffs.filter(f => f.kind === "ingredient");
+  const rations = feedstuffs.filter(f => f.kind === "ration");
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "view-title"
+  }, "Feedstuffs"), /*#__PURE__*/React.createElement("div", {
+    className: "card"
+  }, /*#__PURE__*/React.createElement("h3", null, "Add feedstuff"), /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "Name"), /*#__PURE__*/React.createElement("input", {
+    value: name,
+    onChange: e => setName(e.target.value),
+    placeholder: "e.g. Corn silage, or Finisher #2"
+  }), /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "Type"), /*#__PURE__*/React.createElement("div", {
+    className: "chips",
+    style: {
+      marginBottom: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "chip" + (kind === "ingredient" ? " on" : ""),
+    onClick: () => setKind("ingredient")
+  }, "Ingredient"), /*#__PURE__*/React.createElement("div", {
+    className: "chip" + (kind === "ration" ? " on" : ""),
+    onClick: () => setKind("ration")
+  }, "Ration")), /*#__PURE__*/React.createElement("button", {
+    className: "btn",
+    disabled: !name.trim() || busy,
+    onClick: add
+  }, "Add")), /*#__PURE__*/React.createElement("div", {
+    className: "card"
+  }, /*#__PURE__*/React.createElement("h3", null, "Ingredients"), ingredients.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "empty"
+  }, "None yet") : /*#__PURE__*/React.createElement("ul", {
+    className: "items"
+  }, ingredients.map(f => /*#__PURE__*/React.createElement("li", {
+    key: f.id
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nm"
+  }, f.name, /*#__PURE__*/React.createElement("span", {
+    className: "muted",
+    style: {
+      fontSize: 12,
+      marginLeft: 8
+    }
+  }, counts[f.id] || 0, " rdg")), /*#__PURE__*/React.createElement("button", {
+    className: "icon-del",
+    onClick: () => remove(f)
+  }, "Remove"))))), /*#__PURE__*/React.createElement("div", {
+    className: "card"
+  }, /*#__PURE__*/React.createElement("h3", null, "Rations"), rations.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "empty"
+  }, "None yet") : /*#__PURE__*/React.createElement("ul", {
+    className: "items"
+  }, rations.map(f => /*#__PURE__*/React.createElement("li", {
+    key: f.id
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nm"
+  }, f.name, /*#__PURE__*/React.createElement("span", {
+    className: "muted",
+    style: {
+      fontSize: 12,
+      marginLeft: 8
+    }
+  }, counts[f.id] || 0, " rdg")), /*#__PURE__*/React.createElement("button", {
+    className: "icon-del",
+    onClick: () => remove(f)
+  }, "Remove"))))));
 }
 
 /* ---------------- Stats ---------------- */
-function StatsView({feedstuffs,records,onDeleteRecord}){
-  const [feedstuffId,setFeedstuffId]=useState("");
-  const [range,setRange]=useState("all"); // all | 30 | 90 | custom
-  const [from,setFrom]=useState(""); const [to,setTo]=useState("");
-
-  useEffect(()=>{ if(!feedstuffId && feedstuffs[0]) setFeedstuffId(feedstuffs[0].id); },[feedstuffs]);
-
-  if(feedstuffs.length===0){
-    return (<><div className="view-title">Stats</div><div className="empty">No feedstuffs to analyze yet.</div></>);
+function StatsView({
+  feedstuffs,
+  records,
+  onDeleteRecord
+}) {
+  const [feedstuffId, setFeedstuffId] = useState("");
+  const [range, setRange] = useState("all"); // all | 30 | 90 | custom
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  useEffect(() => {
+    if (!feedstuffId && feedstuffs[0]) setFeedstuffId(feedstuffs[0].id);
+  }, [feedstuffs]);
+  if (feedstuffs.length === 0) {
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "view-title"
+    }, "Stats"), /*#__PURE__*/React.createElement("div", {
+      className: "empty"
+    }, "No feedstuffs to analyze yet."));
   }
-
-  const inRange = (d)=>{
-    if(range==="all") return true;
-    if(range==="30") return d >= cutoffISO(30);
-    if(range==="90") return d >= cutoffISO(90);
-    if(range==="custom"){ if(from && d<from) return false; if(to && d>to) return false; return true; }
+  const inRange = d => {
+    if (range === "all") return true;
+    if (range === "30") return d >= cutoffISO(30);
+    if (range === "90") return d >= cutoffISO(90);
+    if (range === "custom") {
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      return true;
+    }
     return true;
   };
-
-  const rows = records
-    .filter(r=> r.feedstuff_id===feedstuffId && inRange(r.sample_date))
-    .sort((a,b)=> a.sample_date<b.sample_date?1:-1);
-  const stats = computeStats(rows.map(r=>Number(r.dm_percent)));
-  const current = feedstuffs.find(f=>f.id===feedstuffId);
-
-  return (
-    <>
-      <div className="view-title">Stats</div>
-      <div className="card" style={{paddingBottom:14}}>
-        <label className="field">Feedstuff</label>
-        <select value={feedstuffId} onChange={e=>setFeedstuffId(e.target.value)}>
-          {feedstuffs.map(f=> <option key={f.id} value={f.id}>{f.name} ({f.kind})</option>)}
-        </select>
-        <label className="field">Date range</label>
-        <div className="chips" style={{marginBottom:0}}>
-          {[["all","All"],["30","30 d"],["90","90 d"],["custom","Custom"]].map(([v,l])=>(
-            <div key={v} className={"chip"+(range===v?" on":"")} onClick={()=>setRange(v)}>{l}</div>
-          ))}
-        </div>
-        {range==="custom" && (
-          <div className="row2" style={{marginTop:12}}>
-            <div><label className="field">From</label><input type="date" value={from} onChange={e=>setFrom(e.target.value)} /></div>
-            <div><label className="field">To</label><input type="date" value={to} onChange={e=>setTo(e.target.value)} /></div>
-          </div>
-        )}
-      </div>
-
-      <div className="readout">
-        <div className="rt">{current ? current.name : ""} · dry matter</div>
-        <div className="grid">
-          <div className="cell"><div className="k">Readings</div><div className="v tabular">{stats.n}</div></div>
-          <div className="cell"><div className="k">Mean</div><div className="v tabular">{fmt(stats.mean,2)}<span className="u"> %</span></div></div>
-          <div className="cell"><div className="k">Std dev</div><div className="v tabular">{fmt(stats.sd,2)}</div></div>
-          <div className="cell"><div className="k">CV</div><div className="v tabular">{fmt(stats.cv,1)}<span className="u"> %</span></div></div>
-        </div>
-      </div>
-
-      <div className="card">
-        <h3>Readings</h3>
-        {rows.length===0 ? <div className="empty">No readings in this range.</div> : (
-          <table className="recs">
-            <thead><tr><th>Date</th><th style={{textAlign:"right"}}>DM %</th><th></th></tr></thead>
-            <tbody>
-              {rows.map(r=>(
-                <tr key={r.id}>
-                  <td className="tabular">{r.sample_date}</td>
-                  <td className="num">{Number(r.dm_percent).toFixed(1)}</td>
-                  <td className="act">
-                    <button className="icon-del" title="Delete reading"
-                      onClick={()=>{ if(window.confirm(`Delete the ${Number(r.dm_percent).toFixed(1)}% reading from ${r.sample_date}?`)) onDeleteRecord(r.id); }}>✕</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        <p className="muted" style={{marginTop:10}}>Std dev is the sample standard deviation (n−1). CV = std dev ÷ mean × 100.</p>
-      </div>
-    </>
-  );
+  const rows = records.filter(r => r.feedstuff_id === feedstuffId && inRange(r.sample_date)).sort((a, b) => a.sample_date < b.sample_date ? 1 : -1);
+  const stats = computeStats(rows.map(r => Number(r.dm_percent)));
+  const current = feedstuffs.find(f => f.id === feedstuffId);
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "view-title"
+  }, "Stats"), /*#__PURE__*/React.createElement("div", {
+    className: "card",
+    style: {
+      paddingBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "Feedstuff"), /*#__PURE__*/React.createElement("select", {
+    value: feedstuffId,
+    onChange: e => setFeedstuffId(e.target.value)
+  }, feedstuffs.map(f => /*#__PURE__*/React.createElement("option", {
+    key: f.id,
+    value: f.id
+  }, f.name, " (", f.kind, ")"))), /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "Date range"), /*#__PURE__*/React.createElement("div", {
+    className: "chips",
+    style: {
+      marginBottom: 0
+    }
+  }, [["all", "All"], ["30", "30 d"], ["90", "90 d"], ["custom", "Custom"]].map(([v, l]) => /*#__PURE__*/React.createElement("div", {
+    key: v,
+    className: "chip" + (range === v ? " on" : ""),
+    onClick: () => setRange(v)
+  }, l))), range === "custom" && /*#__PURE__*/React.createElement("div", {
+    className: "row2",
+    style: {
+      marginTop: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "From"), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    value: from,
+    onChange: e => setFrom(e.target.value)
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "To"), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    value: to,
+    onChange: e => setTo(e.target.value)
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "readout"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rt"
+  }, current ? current.name : "", " · dry matter"), /*#__PURE__*/React.createElement("div", {
+    className: "grid"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cell"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "k"
+  }, "Readings"), /*#__PURE__*/React.createElement("div", {
+    className: "v tabular"
+  }, stats.n)), /*#__PURE__*/React.createElement("div", {
+    className: "cell"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "k"
+  }, "Mean"), /*#__PURE__*/React.createElement("div", {
+    className: "v tabular"
+  }, fmt(stats.mean, 2), /*#__PURE__*/React.createElement("span", {
+    className: "u"
+  }, " %"))), /*#__PURE__*/React.createElement("div", {
+    className: "cell"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "k"
+  }, "Std dev"), /*#__PURE__*/React.createElement("div", {
+    className: "v tabular"
+  }, fmt(stats.sd, 2))), /*#__PURE__*/React.createElement("div", {
+    className: "cell"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "k"
+  }, "CV"), /*#__PURE__*/React.createElement("div", {
+    className: "v tabular"
+  }, fmt(stats.cv, 1), /*#__PURE__*/React.createElement("span", {
+    className: "u"
+  }, " %"))))), /*#__PURE__*/React.createElement("div", {
+    className: "card"
+  }, /*#__PURE__*/React.createElement("h3", null, "Readings"), rows.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "empty"
+  }, "No readings in this range.") : /*#__PURE__*/React.createElement("table", {
+    className: "recs"
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Date"), /*#__PURE__*/React.createElement("th", {
+    style: {
+      textAlign: "right"
+    }
+  }, "DM %"), /*#__PURE__*/React.createElement("th", null))), /*#__PURE__*/React.createElement("tbody", null, rows.map(r => /*#__PURE__*/React.createElement("tr", {
+    key: r.id
+  }, /*#__PURE__*/React.createElement("td", {
+    className: "tabular"
+  }, r.sample_date), /*#__PURE__*/React.createElement("td", {
+    className: "num"
+  }, Number(r.dm_percent).toFixed(1)), /*#__PURE__*/React.createElement("td", {
+    className: "act"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "icon-del",
+    title: "Delete reading",
+    onClick: () => {
+      if (window.confirm(`Delete the ${Number(r.dm_percent).toFixed(1)}% reading from ${r.sample_date}?`)) onDeleteRecord(r.id);
+    }
+  }, "✕")))))), /*#__PURE__*/React.createElement("p", {
+    className: "muted",
+    style: {
+      marginTop: 10
+    }
+  }, "Std dev is the sample standard deviation (n−1). CV = std dev ÷ mean × 100.")));
 }
 
 /* ---------------- Manage (admin only) ---------------- */
-function ManageView({feedyards,feedstuffs,activeYard,onAddYard,onAddFeedstuff,onAssign}){
-  const [yardName,setYardName]=useState("");
-  const [fsName,setFsName]=useState("");
-  const [fsKind,setFsKind]=useState("ingredient");
-  const [users,setUsers]=useState([]);
-  const [loadingUsers,setLoadingUsers]=useState(true);
-
-  async function loadUsers(){
+function ManageView({
+  feedyards,
+  feedstuffs,
+  activeYard,
+  onAddYard,
+  onAddFeedstuff,
+  onAssign
+}) {
+  const [yardName, setYardName] = useState("");
+  const [fsName, setFsName] = useState("");
+  const [fsKind, setFsKind] = useState("ingredient");
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  async function loadUsers() {
     setLoadingUsers(true);
-    const { data } = await sb.from("profiles").select("id,email,feedyard_id,is_admin").order("email");
-    setUsers(data||[]); setLoadingUsers(false);
+    const {
+      data
+    } = await sb.from("profiles").select("id,email,feedyard_id,is_admin").order("email");
+    setUsers(data || []);
+    setLoadingUsers(false);
   }
-  useEffect(()=>{ loadUsers(); },[]);
-
-  const activeYardName = feedyards.find(y=>y.id===activeYard)?.name || "";
-
-  return (
-    <>
-      <div className="view-title">Manage</div>
-
-      <div className="card">
-        <h3>Feedyards</h3>
-        {feedyards.length===0 ? <div className="empty" style={{padding:"6px 0"}}>None yet</div> : (
-          <ul className="items">
-            {feedyards.map(y=> <li key={y.id}><span className="nm">{y.name}</span></li>)}
-          </ul>
-        )}
-        <label className="field">New feedyard name</label>
-        <input value={yardName} onChange={e=>setYardName(e.target.value)} placeholder="e.g. Prairie Cattle Co." />
-        <button className="btn" disabled={!yardName.trim()} onClick={()=>{ onAddYard(yardName); setYardName(""); }}>Create feedyard</button>
-      </div>
-
-      <div className="card">
-        <h3>Add feedstuff for {activeYardName || "selected yard"}</h3>
-        <p className="muted" style={{marginTop:-4,marginBottom:10}}>Adds to whichever yard is selected in the top bar.</p>
-        <label className="field">Name</label>
-        <input value={fsName} onChange={e=>setFsName(e.target.value)} placeholder="e.g. Wet distillers" />
-        <label className="field">Type</label>
-        <div className="chips" style={{marginBottom:0}}>
-          <div className={"chip"+(fsKind==="ingredient"?" on":"")} onClick={()=>setFsKind("ingredient")}>Ingredient</div>
-          <div className={"chip"+(fsKind==="ration"?" on":"")} onClick={()=>setFsKind("ration")}>Ration</div>
-        </div>
-        <button className="btn" disabled={!fsName.trim()||!activeYard} onClick={async()=>{ const ok=await onAddFeedstuff(fsName,fsKind); if(ok) setFsName(""); }}>Add feedstuff</button>
-      </div>
-
-      <div className="card">
-        <h3>Users &amp; yard access</h3>
-        <p className="muted" style={{marginTop:-4,marginBottom:10}}>Create logins in Supabase (Authentication → Users). Then link each one to a yard here.</p>
-        {loadingUsers ? <div className="empty">Loading…</div> : (
-          users.length===0 ? <div className="empty">No users yet</div> : (
-            <ul className="items">
-              {users.map(u=>(
-                <li key={u.id} style={{flexDirection:"column",alignItems:"stretch",gap:6}}>
-                  <span className="nm">{u.email}{u.is_admin && <span className="kindtag">developer</span>}</span>
-                  {!u.is_admin && (
-                    <select value={u.feedyard_id||""} onChange={e=>{ onAssign(u.id,e.target.value); loadUsers(); }}>
-                      <option value="">— not assigned —</option>
-                      {feedyards.map(y=> <option key={y.id} value={y.id}>{y.name}</option>)}
-                    </select>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )
-        )}
-      </div>
-    </>
-  );
+  useEffect(() => {
+    loadUsers();
+  }, []);
+  const activeYardName = feedyards.find(y => y.id === activeYard)?.name || "";
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "view-title"
+  }, "Manage"), /*#__PURE__*/React.createElement("div", {
+    className: "card"
+  }, /*#__PURE__*/React.createElement("h3", null, "Feedyards"), feedyards.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "empty",
+    style: {
+      padding: "6px 0"
+    }
+  }, "None yet") : /*#__PURE__*/React.createElement("ul", {
+    className: "items"
+  }, feedyards.map(y => /*#__PURE__*/React.createElement("li", {
+    key: y.id
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nm"
+  }, y.name)))), /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "New feedyard name"), /*#__PURE__*/React.createElement("input", {
+    value: yardName,
+    onChange: e => setYardName(e.target.value),
+    placeholder: "e.g. Prairie Cattle Co."
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "btn",
+    disabled: !yardName.trim(),
+    onClick: () => {
+      onAddYard(yardName);
+      setYardName("");
+    }
+  }, "Create feedyard")), /*#__PURE__*/React.createElement("div", {
+    className: "card"
+  }, /*#__PURE__*/React.createElement("h3", null, "Add feedstuff for ", activeYardName || "selected yard"), /*#__PURE__*/React.createElement("p", {
+    className: "muted",
+    style: {
+      marginTop: -4,
+      marginBottom: 10
+    }
+  }, "Adds to whichever yard is selected in the top bar."), /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "Name"), /*#__PURE__*/React.createElement("input", {
+    value: fsName,
+    onChange: e => setFsName(e.target.value),
+    placeholder: "e.g. Wet distillers"
+  }), /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "Type"), /*#__PURE__*/React.createElement("div", {
+    className: "chips",
+    style: {
+      marginBottom: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "chip" + (fsKind === "ingredient" ? " on" : ""),
+    onClick: () => setFsKind("ingredient")
+  }, "Ingredient"), /*#__PURE__*/React.createElement("div", {
+    className: "chip" + (fsKind === "ration" ? " on" : ""),
+    onClick: () => setFsKind("ration")
+  }, "Ration")), /*#__PURE__*/React.createElement("button", {
+    className: "btn",
+    disabled: !fsName.trim() || !activeYard,
+    onClick: async () => {
+      const ok = await onAddFeedstuff(fsName, fsKind);
+      if (ok) setFsName("");
+    }
+  }, "Add feedstuff")), /*#__PURE__*/React.createElement("div", {
+    className: "card"
+  }, /*#__PURE__*/React.createElement("h3", null, "Users & yard access"), /*#__PURE__*/React.createElement("p", {
+    className: "muted",
+    style: {
+      marginTop: -4,
+      marginBottom: 10
+    }
+  }, "Create logins in Supabase (Authentication → Users). Then link each one to a yard here."), loadingUsers ? /*#__PURE__*/React.createElement("div", {
+    className: "empty"
+  }, "Loading…") : users.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "empty"
+  }, "No users yet") : /*#__PURE__*/React.createElement("ul", {
+    className: "items"
+  }, users.map(u => /*#__PURE__*/React.createElement("li", {
+    key: u.id,
+    style: {
+      flexDirection: "column",
+      alignItems: "stretch",
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nm"
+  }, u.email, u.is_admin && /*#__PURE__*/React.createElement("span", {
+    className: "kindtag"
+  }, "developer")), !u.is_admin && /*#__PURE__*/React.createElement("select", {
+    value: u.feedyard_id || "",
+    onChange: e => {
+      onAssign(u.id, e.target.value);
+      loadUsers();
+    }
+  }, /*#__PURE__*/React.createElement("option", {
+    value: ""
+  }, "— not assigned —"), feedyards.map(y => /*#__PURE__*/React.createElement("option", {
+    key: y.id,
+    value: y.id
+  }, y.name))))))));
 }
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
-</script>
-
-<script>
-  // Register the service worker (enables install-to-home-screen / PWA)
-  if("serviceWorker" in navigator){
-    window.addEventListener("load", ()=> navigator.serviceWorker.register("./sw.js").catch(()=>{}));
-  }
+ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
 </script>
 </body>
 </html>
