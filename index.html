@@ -250,7 +250,8 @@ const IconExit = /*#__PURE__*/React.createElement("svg", {
 function StatChart({
   data,
   mean,
-  sd
+  sd,
+  target
 }) {
   const pts = data.map(r => ({
     t: new Date(r.sample_date + "T00:00:00").getTime(),
@@ -281,6 +282,11 @@ function StatChart({
     lo = Math.min(lo, mean - sd);
     hi = Math.max(hi, mean + sd);
   }
+  const hasTarget = target !== null && target !== undefined;
+  if (hasTarget) {
+    lo = Math.min(lo, target);
+    hi = Math.max(hi, target);
+  }
   let pad = (hi - lo) * 0.12;
   if (pad <= 0) pad = Math.max(1, Math.abs(hi) * 0.05);
   lo -= pad;
@@ -300,7 +306,8 @@ function StatChart({
     amber: "#c47a3d",
     line: "#dad3c7",
     muted: "#6b655c",
-    sd: "#a9b4b9"
+    sd: "#a9b4b9",
+    green: "#3f7a4f"
   };
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("svg", {
     viewBox: "0 0 " + W + " " + H,
@@ -355,6 +362,13 @@ function StatChart({
     stroke: C.amber,
     strokeWidth: "1.5",
     strokeDasharray: "6 4"
+  }), hasTarget && /*#__PURE__*/React.createElement("line", {
+    x1: mL,
+    y1: yOf(target),
+    x2: W - mR,
+    y2: yOf(target),
+    stroke: C.green,
+    strokeWidth: "1.75"
   }), /*#__PURE__*/React.createElement("path", {
     d: path,
     fill: "none",
@@ -427,7 +441,21 @@ function StatChart({
       borderTop: "1px dashed " + C.sd,
       display: "inline-block"
     }
-  }), "±1 SD")));
+  }), "±1 SD"), hasTarget && /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 5
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 16,
+      height: 2,
+      background: C.green,
+      display: "inline-block",
+      borderRadius: 1
+    }
+  }), "Target")));
 }
 
 /* ===================================================================
@@ -610,7 +638,8 @@ function App() {
   async function saveDM({
     feedstuff_id,
     sample_date,
-    dm_percent
+    dm_percent,
+    target
   }) {
     const {
       error
@@ -624,6 +653,18 @@ function App() {
     if (error) {
       flash(error.message, "err");
       return false;
+    }
+    // Persist the ration's formulated target if the user changed it.
+    const fs = feedstuffs.find(f => f.id === feedstuff_id);
+    if (fs && fs.kind === "ration" && target !== null && target !== undefined && Number(target) !== Number(fs.formulated_target)) {
+      const {
+        error: e2
+      } = await sb.from("feedstuffs").update({
+        formulated_target: target
+      }).eq("id", feedstuff_id);
+      if (e2) {
+        flash(e2.message, "err");
+      }
     }
     flash("Saved");
     loadYardData(activeYard);
@@ -781,10 +822,19 @@ function EnterView({
   const [feedstuffId, setFeedstuffId] = useState("");
   const [date, setDate] = useState(todayISO());
   const [dm, setDm] = useState("");
+  const [target, setTarget] = useState("");
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     if (!feedstuffId && feedstuffs[0]) setFeedstuffId(feedstuffs[0].id);
   }, [feedstuffs]);
+  const selected = feedstuffs.find(f => f.id === feedstuffId);
+  const isRation = selected && selected.kind === "ration";
+
+  // Pre-fill the ration's stored formulated target; it carries across samples.
+  useEffect(() => {
+    const f = feedstuffs.find(x => x.id === feedstuffId);
+    setTarget(f && f.formulated_target !== null && f.formulated_target !== undefined ? String(f.formulated_target) : "");
+  }, [feedstuffId, feedstuffs]);
   if (feedstuffs.length === 0) {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "view-title"
@@ -800,17 +850,19 @@ function EnterView({
       onClick: goFeedstuffs
     }, "Add feedstuffs")));
   }
-  const valid = feedstuffId && date && dm !== "" && Number(dm) >= 0 && Number(dm) <= 100;
+  const targetOk = !isRation || target === "" || Number(target) >= 0 && Number(target) <= 100;
+  const valid = feedstuffId && date && dm !== "" && Number(dm) >= 0 && Number(dm) <= 100 && targetOk;
   async function submit() {
     if (!valid) return;
     setBusy(true);
     const ok = await onSave({
       feedstuff_id: feedstuffId,
       sample_date: date,
-      dm_percent: Number(dm)
+      dm_percent: Number(dm),
+      target: isRation && target !== "" ? Number(target) : null
     });
     setBusy(false);
-    if (ok) setDm(""); // keep feedstuff + date for fast repeat entries
+    if (ok) setDm(""); // keep feedstuff, date, and target for fast repeat entries
   }
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "view-title"
@@ -843,7 +895,17 @@ function EnterView({
     max: "100",
     value: dm,
     onChange: e => setDm(e.target.value)
-  }))), /*#__PURE__*/React.createElement("button", {
+  }))), isRation && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", {
+    className: "field"
+  }, "Formulated target %"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    inputMode: "decimal",
+    step: "0.1",
+    min: "0",
+    max: "100",
+    value: target,
+    onChange: e => setTarget(e.target.value)
+  })), /*#__PURE__*/React.createElement("button", {
     className: "btn",
     disabled: !valid || busy,
     onClick: submit
@@ -1070,7 +1132,8 @@ function StatsView({
   }, /*#__PURE__*/React.createElement("h3", null, current ? current.name : "Feedstuff", " over time"), /*#__PURE__*/React.createElement(StatChart, {
     data: rows,
     mean: stats.mean,
-    sd: stats.sd
+    sd: stats.sd,
+    target: current && current.kind === "ration" && current.formulated_target !== null && current.formulated_target !== undefined ? Number(current.formulated_target) : null
   })), /*#__PURE__*/React.createElement("div", {
     className: "card"
   }, /*#__PURE__*/React.createElement("h3", null, "Observations"), rows.length === 0 ? /*#__PURE__*/React.createElement("div", {
