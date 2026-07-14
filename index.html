@@ -511,10 +511,11 @@ function LoginView() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "auth-card"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "logo"
-  }, "Feedyard DM"), /*#__PURE__*/React.createElement("div", {
-    className: "sub"
-  }, "Dry-matter log"), /*#__PURE__*/React.createElement("label", {
+    className: "logo",
+    style: {
+      marginBottom: 20
+    }
+  }, "Feedyard DM"), /*#__PURE__*/React.createElement("label", {
     className: "field"
   }, "Email"), /*#__PURE__*/React.createElement("input", {
     type: "email",
@@ -537,7 +538,15 @@ function LoginView() {
     onClick: signIn
   }, busy ? "Signing in…" : "Sign in"), err && /*#__PURE__*/React.createElement("div", {
     className: "err-text"
-  }, err)));
+  }, err), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 22,
+      textAlign: "center",
+      fontSize: 11,
+      color: "var(--muted)",
+      letterSpacing: ".2px"
+    }
+  }, "Developed by Wes W. Gentry, Ph.D.")));
 }
 
 /* ===================================================================
